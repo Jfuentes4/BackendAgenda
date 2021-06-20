@@ -1,29 +1,34 @@
 const  express = require('express');
+const dotenv = require('dotenv');
+const errorMiddleware = require('./middleware/errors');
+const usersRouter = require('./routers/usersRouter');
+const tasksRouter = require('./routers/tasksRouter');
+
+dotenv.config({path: __dirname + '/.env.local'});
+const PORT = process.env.PORT || 5000;
 const app = express();
-
-const port = 5000;
-
-//Obtener usuarios
-app.get('/users', (req, res) => {});
-
-//Obtener todas las tareas
-app.get('/user/tasks', (req, res) => {});
-
-//Obtener una tareas
-app.get('/user/task', (req, res) => {});
+console.log(process.env.PORT);
 
 
-//Crear una tarea
-app.post('/user/tasks', (req, res) => {
-    res.status(201)
+
+//Async Routes Handlinggit
+process.on('uncaughtException', (error) => {
+    console.log(error);
 });
 
-//Actualizar una tarea
-app.put('/user/task', (req, res) => {});
+process.on('unhandledRejection', (error) => {
+    console.log(error);
+});
 
-//Eliminar una tarea
-app.delete('/user/task', (req, res) => {});
+//Middleware
+app.use(express.json());
 
-app.listen(port, () => {
-    console.log(`listen on port ${port}`)
+//Routers
+app.use('/users', usersRouter);
+app.use('/tasks', tasksRouter);
+
+app.use(errorMiddleware);
+
+app.listen(PORT, () => {
+    console.log(`listen on port ${PORT}`)
 })
