@@ -18,13 +18,13 @@ function routeHelper(callback) {
 function authHelper (callback) {
     return async (req, res) => {
         jwt.verify(req.token, jwtKey, async (err, data) => {
-            //console.log(data)
+        console.log(data)
 
         if (err) {
-            res.sendStatus(403);
+            res.status(403);
         } else {
-            console.log(data.user)
-            req.authData = data.user;
+            console.log(data)
+            req.authData = data;
             await callback(req, res);
         }
         }) 

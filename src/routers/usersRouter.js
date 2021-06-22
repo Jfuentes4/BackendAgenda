@@ -30,6 +30,7 @@ async function ifExists (email) {
     return exists;
 }
 
+//obtiene todos los datos de los usuarios del sistema, es temporal solo para pruebas
 usersRouter.get('/', routeHelper( async (req, res) => {
     let sqlQuery = 'SELECT id, username, email, password FROM users';
     let rows = await pool.query(sqlQuery, req.params.id);
@@ -43,20 +44,25 @@ usersRouter.get('/', routeHelper( async (req, res) => {
     }
 }));
 
-usersRouter.get('/:id', routeHelper( async (req, res) => {
-    let sqlQuery = 'SELECT id, username, email, password FROM users WHERE id=?';
-    let rows = await pool.query(sqlQuery, req.params.id);
-    if (rows.length > 0) {
-        res.status(200).json(rows[0]);
-    } else {
-        res.status(404).json({
-            status: 'error',
-            message: 'user not found',
-        });
+//obtiene los datos del unico usuario,
+usersRouter.get('/profile', validations.authValidation(), routeHelper( authHelper(
+    async (req, res) => {
+        let sqlQuery = 'SELECT id, username, email, password FROM users WHERE id=?';
+        const {id} = req.authData;
+        let rows = await pool.query(sqlQuery, id);
+        if (rows.length > 0) {
+            res.status(200).json(rows[0]);
+        } else {
+            res.status(404).json({
+                status: 'error',
+                message: 'user not found',
+            });
+        }
     }
-}));
+)));
 
-usersRouter.post('/', validations.validate(validations.userValidation), routeHelper( async (req, res) => {
+//añadir usuarios
+usersRouter.post('/', bouncer.blocked, validations.validate(validations.userValidation), routeHelper( async (req, res) => {
     const {username, email, password} = req.body; 
     const encryptedPass = await bcrypt.hash(password,14)
     const sqlQuery = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)';
@@ -76,6 +82,8 @@ usersRouter.post('/', validations.validate(validations.userValidation), routeHel
     }
 }));
 
+
+//obtener token para la api
 usersRouter.post('/login', bouncer.blocked, validations.validate(validations.loginValidation), routeHelper( async (req, res) => {
     const {email, password} = req.body; 
     const sqlQuery = 'SELECT email, id, username, password FROM users WHERE email=?';
@@ -116,56 +124,65 @@ usersRouter.post('/login', bouncer.blocked, validations.validate(validations.log
     }
 }))
 
-usersRouter.put('/:id', validations.validate(validations.userValidation), routeHelper( async (req, res) => {
-    const {username, email, password} = req.body;
-    const encryptedPass = await bcrypt.hash(password,14)
-    const sqlQuery = 'update users set username=?, email=?, password=? WHERE id=?';
-    const exist = await ifExists(email);
 
-    if (!exist) {
-        let rows = await pool.query(sqlQuery, [username, email, encryptedPass, req.params.id]);
-        console.log(rows);
-        
-        if (rows.affectedRows > 0) {
+// actualizar usuario
+usersRouter.put('/:id', validations.authValidation(), validations.validate(validations.userValidation), routeHelper( authHelper(
+    async (req, res) => {
+        const {username, password} = req.body;
+        const nEmail = req.body.email;
+        const encryptedPass = await bcrypt.hash(password,14)
+        const {id, email} = req.authData;
+        const sqlQuery = 'update users set username=?, email=?, password=? WHERE id=?';
+        const exist = await ifExists(nEmail);
+
+        if (!exist) {
+            let rows = await pool.query(sqlQuery, [username, nEmail, encryptedPass, id]);
+            console.log(rows);
             
-            res.status(200).json({
-                status: 'ok',
-                updated: true,
+            if (rows.affectedRows > 0) {
+                
+                res.status(200).json({
+                    status: 'ok',
+                    updated: true,
+                });
+            } else {
+                res.status(404).json({
+                    status: 'error',
+                    updated: false,
+                    message: 'user not found',
+                });
+            }
+        } else {
+            res.status(400).json({
+                status: 'error',
+                message: 'this email already exists',
             });
+        }
+    }
+)));
+
+usersRouter.delete('/:id', validations.authValidation(), routeHelper( authHelper(
+    async (req, res) => {
+        const sqlQuery = 'delete from users where users.id=?';
+        const {id} = req.authData;
+        let result = await pool.query(sqlQuery, id);
+        console.log(result.affectedRows);
+        if (result.affectedRows > 0) {
+            res.status(200).json(
+                {
+                    status: 'ok',
+                    deleted: true,
+                }
+            );
         } else {
             res.status(404).json({
                 status: 'error',
-                updated: false,
+                deleted: false,
                 message: 'user not found',
             });
         }
-    } else {
-        res.status(400).json({
-            status: 'error',
-            message: 'this email already exists',
-        });
     }
-}));
-
-usersRouter.delete('/:id', routeHelper( async (req, res) => {
-    let sqlQuery = 'delete from users where users.id=?';
-    let result = await pool.query(sqlQuery, req.params.id);
-    console.log(result.affectedRows);
-    if (result.affectedRows > 0) {
-        res.status(200).json(
-            {
-                status: 'ok',
-                deleted: true,
-            }
-        );
-    } else {
-        res.status(404).json({
-            status: 'error',
-            deleted: false,
-            message: 'user not found',
-        });
-    }
-}));
+)));
 
 
 

@@ -15,6 +15,7 @@ setLocale({
 function validate (validation) {
     return (req, res, next) => {
         try {
+            //console.log('entro')
             validation(req.body);
 
             next();
@@ -57,18 +58,21 @@ function authValidation () {
     return (req, res, next) => {
         try {
             const bearerHeader = req.headers['authorization'];
+            console.log(bearerHeader)
             if (typeof bearerHeader !== 'undefined') {
                 const bearer = bearerHeader.split(' ');
                 const bearerToken = bearer[1];
                 req.token = bearerToken;
                 next();
             } else {
-                res.sendStatus(403).json({
+                console.log('entro')
+                res.status(403).json({
                     status: 'error',
                     message: 'access denied'
                 });
             }
         } catch (err) {
+            console.log('error')
             next(new ValidationError(err));
         }
     } 
