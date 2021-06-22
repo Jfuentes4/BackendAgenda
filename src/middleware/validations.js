@@ -2,6 +2,7 @@ const yup = require('yup');
 const ValidationError = require('../errors/validationError');
 const { setLocale } = require('yup');
 
+//creacion de diccionario de mensajes de la libreria YUP
 setLocale({
   string: {
     matches: 'the password must be at least 8 characters with 1 uppercase and 1 number',
@@ -12,6 +13,7 @@ setLocale({
   },
 });
 
+//funcion tipo Helper para la validacion de las rutas
 function validate (validation) {
     return (req, res, next) => {
         try {
@@ -25,6 +27,7 @@ function validate (validation) {
     } 
 }
 
+//validacion para las entradas de tareas via post
 function taskValidation (data) {
     const taskSchema = yup.object().shape({
         title: yup.string().max(80).required(),
@@ -35,6 +38,7 @@ function taskValidation (data) {
     taskSchema.validateSync(data);
 }
 
+//validacion para las entradas de usuarios via post
 function userValidation (data) {
     const userSchema = yup.object().shape({
         username: yup.string().min(5).max(30).required(),
@@ -45,6 +49,7 @@ function userValidation (data) {
     userSchema.validateSync(data);
 }
 
+//validacion para las entradas de login via post
 function loginValidation (data) {
     const userSchema = yup.object().shape({
         password: yup.string().min(10).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g).required(),
@@ -54,6 +59,8 @@ function loginValidation (data) {
     userSchema.validateSync(data);
 }
 
+
+//validacion de autentificacion usando JWT
 function authValidation () {
     return (req, res, next) => {
         try {

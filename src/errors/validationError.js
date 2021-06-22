@@ -1,3 +1,5 @@
+//clase de error de validacion para encapsular errores no internos o de validacion de datos de entrada
+
 class ValidationError extends Error {
     constructor (error) {
         super(error.message);

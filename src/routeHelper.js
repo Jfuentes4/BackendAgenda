@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 var jwtKey = "passphrase";
 
+//Helper para ayudar con la gestion de errores asyncronos
 function routeHelper(callback) {
     return async (req, res) => {
         try {
@@ -15,6 +16,7 @@ function routeHelper(callback) {
     
 }
 
+//Helper para ayudar con la autentificación
 function authHelper (callback) {
     return async (req, res) => {
         jwt.verify(req.token, jwtKey, async (err, data) => {

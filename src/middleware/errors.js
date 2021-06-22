@@ -1,3 +1,5 @@
+
+//middleware para la gestion de errores en flujo sincrono de express
 const errorMiddleware = (error, req, res, next) => {
     //console.log("hubo un error")
     let errorObj;

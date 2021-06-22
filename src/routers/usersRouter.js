@@ -161,6 +161,8 @@ usersRouter.put('/:id', validations.authValidation(), validations.validate(valid
     }
 )));
 
+
+//Eliminar usuario
 usersRouter.delete('/:id', validations.authValidation(), routeHelper( authHelper(
     async (req, res) => {
         const sqlQuery = 'delete from users where users.id=?';
